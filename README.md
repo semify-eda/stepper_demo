@@ -7,3 +7,6 @@ For the PlatformIO IDE, follow the steps outlined here: https://docs.platformio.
 If you are using PlatformIO, remember to include the `platformio.ini` configuration file to ensure correct settings and dependencies.
 
 By following these guidelines, you'll be able to seamlessly run and experiment with the provided code on your STM32 Nucleo F4464RE Microcontroller.
+
+
+I added a new source file, `smartwave.cpp`, to send control signals to the motor shield via I2C using SmartWave. This has been tested with the STM32 Nucleo F4464RE microcontroller. It's important to note that this code won't work with the Arduino UNO board since it requires multiple I2C channels, enabling the microcontroller to function both as a controller and as a peripheral.
