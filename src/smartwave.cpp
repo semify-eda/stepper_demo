@@ -2,17 +2,32 @@
   This code demonstrates the practical use of the EX-MotorShield8874.
   It was tested on a STM32 Nucleo F4464RE Microcontroller, 
   driving a 17HS4401 bipolar stepper motor - https://www.cytron.io/p-nema-17hs4401-bipolar-stepper-motor.
-
   Note: The stepper motor draws 1.7A per phase, requiring a power supply of at least 9V and 5A for stable operation.
+
+  If the stepper motor is used with SmartWave to send data via I2C, the following example data can be used.
+
+  The following set of commands changes the position of the stepper motor with an increment of 50 at a constant speed and direction.
+  Position	Speed		Direction
+    0x32     0x64		 0x00
+    0x64		 0x64		 0x00
+    0x96		 0x64		 0x00
+    0xC8		 0x64		 0x00
+
+  The following set of commands changes the speed, position, and direction of the stepper motor.
+  Position	Speed		Direction
+    0xC8	   0x0A		 0x00	  // Do a full revolution clockwise at low speed.
+    0x00	   0x0A		 0x01	  // Do a full revolution counterclockwise at low speed.
+    0xC8	   0xFA	   0x00	  // Do a full revolution clockwise at high speed
+    0x00	   0xFA		 0x01	  // Do a full revolution counterclockwise at highspeed.
 */
 
-//#include <Arduino.h>    // If used in VSCode / PlatformIO - include the Arduino library
+#include <Arduino.h>    // If used in VSCode / PlatformIO - include the Arduino library
 #include <AccelStepper.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define I2C_ADDRESS         0X8   // I2C address of this device
+#define I2C_ADDRESS         0X8   // I2C address of this device - Used for SmartWave
 #define MotorInterfaceType  2     // Define the AccelStepper interface type to be Full-2-Wire
 #define SCREEN_WIDTH        128   // OLED display width, in pixels
 #define SCREEN_HEIGHT       32    // OLED display hight, in pixels
@@ -51,11 +66,14 @@ int byteCount;
 const double mVamp = 1.1;   // Scaling factor 1100mV/A  - https://www.pololu.com/product/4035 
 const double senseFactor = ((5.0 / 1024) / mVamp) * 1000; // Used to convert the measured voltage on the Arduino's ADC input to mA
 
-// Create a new instance of the AccelStepper class
+// Create a new instance of the AccelStepper class to control the stepper motor
 AccelStepper stepper(MotorInterfaceType, dirPinA, dirPinB);              
-// Initialise the OLED display 
+
+// Initialise the OLED display as an I2C peripheral
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+// Create a second Wire object to receive I2C data from SmartWave.
+// Ensure that the selected pins are not used by default on the EX-MotorShield8874
 TwoWire Wire2(PC9, PA8); 
 
 void setup() 
@@ -73,18 +91,21 @@ void setup()
 
 void loop() {
   moveStepper();
+  //stepper.stop();
   wait(100);
 }
 
 // Custom wait with display
-void wait(int time){
+void wait(int time)
+{
   for (int i = 0; i < time; i++){
     displayData(currentPos, avgCurrent());
   }
 }
 
 // Initialize the OLED display
-void initializeDisplay(void) {
+void initializeDisplay(void) 
+{
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     while (true); // Halt execution
@@ -108,11 +129,12 @@ void initializeMotor(void)
   digitalWrite(brakePinB, LOW);
 }
 
+// Control the stepper motor using received I2C commands
 void moveStepper() 
 { 
-    if(stepPos == 0xC8  | currentPos == 200) {
+    if(stepPos == currentPos) {
       stepper.stop();
-      Serial.println("Reset stepper");
+      Serial.println("Stepper is already at the given position");
       Serial.println("Waiting for new command");
     }
 
@@ -128,48 +150,32 @@ void moveStepper()
     }
 }
 
+
 // Function to handle I2C data reception
 void I2C_RxHandler(int byteCount)
 {
   Serial.println();
   Serial.println("I2C data reception");
-  byte command;
   byte pos;
   byte speed;
   byte direction;
-  char str[20];
 
   while(Wire2.available()){
-    command   = Wire2.read();     // Read the I2C command Position or Speed change
-    pos       = Wire2.read();         // Read the data associated with the command
-	  speed     = Wire2.read();       // for position and speed
+    pos       = Wire2.read();     
+	  speed     = Wire2.read();     
     direction = Wire2.read();
   }
 
-  // Process the received command, position and speed
-  // 0x50 / 80 - position control command
-  if(command == 80){
-    strcpy(str, "Position");
-    stepPos = pos;
-    if(direction == 0){
-      stepSpeed = speed;
-      }else
-      stepSpeed = speed * (-1) ;
-  } 
-  // 0x46 / 70  - speed control command
-  else if(command == 70){    
-    strcpy(str, "Speed");         
-    stepPos = pos;
-    if(direction == 0){
-      stepSpeed = speed;
-      }else
-      stepSpeed = speed * (-1) ;
+  stepPos = pos;
+  if(direction == 0){
+    stepSpeed = speed;
+  }
+  else if(direction == 1){
+    stepSpeed = speed * (-1) ;
   }
   else
-  Serial.println(F("The received command is not recognised."));
+    Serial.println(F("The received command is not recognised."));
 
-  Serial.print("Received Command = ");
-  Serial.println(str);
   Serial.print("Received Position = ");
   Serial.println(stepPos);
   Serial.print("Received Speed = ");
@@ -190,7 +196,7 @@ float avgCurrent(void) {
   return avgAmp;
 }
 
-// Display motor position and current on OLED display
+// Display motor position and current consumption on OLED display
 void displayData(int position, int amps) {
   display.clearDisplay();
   display.setFont();
