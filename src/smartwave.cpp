@@ -8,17 +8,17 @@
 
   The following set of commands changes the position of the stepper motor with an increment of 50 at a constant speed and direction.
   Position	Speed		Direction
-    0x32     0x64		 0x00
-    0x64		 0x64		 0x00
-    0x96		 0x64		 0x00
-    0xC8		 0x64		 0x00
+    0x32     	0x64		 0x00
+    0x64	0x64		 0x00
+    0x96	0x64		 0x00
+    0xC8	0x64		 0x00
 
   The following set of commands changes the speed, position, and direction of the stepper motor.
   Position	Speed		Direction
-    0xC8	   0x0A		 0x00	  // Do a full revolution clockwise at low speed.
-    0x00	   0x0A		 0x01	  // Do a full revolution counterclockwise at low speed.
-    0xC8	   0xFA	   	 0x00	  // Do a full revolution clockwise at high speed
-    0x00	   0xFA		 0x01	  // Do a full revolution counterclockwise at high speed.
+    0xC8	 0x0A		 0x00	  // Do a full revolution clockwise at low speed.
+    0x00	 0x0A		 0x01	  // Do a full revolution counterclockwise at low speed.
+    0xC8	 0xFA	   	 0x00	  // Do a full revolution clockwise at high speed
+    0x00	 0xFA		 0x01	  // Do a full revolution counterclockwise at high speed.
 */
 
 #include <Arduino.h>    // If used in VSCode / PlatformIO - include the Arduino library
