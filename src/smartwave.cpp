@@ -1,6 +1,6 @@
 /*
   This code demonstrates the practical use of the EX-MotorShield8874.
-  It was tested on a STM32 Nucleo F4464RE Microcontroller, 
+  It was tested on an STM32 Nucleo F4464RE Microcontroller, 
   driving a 17HS4401 bipolar stepper motor - https://www.cytron.io/p-nema-17hs4401-bipolar-stepper-motor.
   Note: The stepper motor draws 1.7A per phase, requiring a power supply of at least 9V and 5A for stable operation.
 
@@ -8,17 +8,17 @@
 
   The following set of commands changes the position of the stepper motor with an increment of 50 at a constant speed and direction.
   Position	Speed		Direction
-    0x32     0x64		 0x00
-    0x64		 0x64		 0x00
-    0x96		 0x64		 0x00
-    0xC8		 0x64		 0x00
+    0x32     	0x64		 0x00
+    0x64	0x64		 0x00
+    0x96	0x64		 0x00
+    0xC8	0x64		 0x00
 
   The following set of commands changes the speed, position, and direction of the stepper motor.
   Position	Speed		Direction
-    0xC8	   0x0A		 0x00	  // Do a full revolution clockwise at low speed.
-    0x00	   0x0A		 0x01	  // Do a full revolution counterclockwise at low speed.
-    0xC8	   0xFA	   0x00	  // Do a full revolution clockwise at high speed
-    0x00	   0xFA		 0x01	  // Do a full revolution counterclockwise at highspeed.
+    0xC8	 0x0A		 0x00	  // Do a full revolution clockwise at low speed.
+    0x00	 0x0A		 0x01	  // Do a full revolution counterclockwise at low speed.
+    0xC8	 0xFA	   	 0x00	  // Do a full revolution clockwise at high speed
+    0x00	 0xFA		 0x01	  // Do a full revolution counterclockwise at high speed.
 */
 
 #include <Arduino.h>    // If used in VSCode / PlatformIO - include the Arduino library
@@ -30,7 +30,7 @@
 #define I2C_ADDRESS         0X8   // I2C address of this device - Used for SmartWave
 #define MotorInterfaceType  2     // Define the AccelStepper interface type to be Full-2-Wire
 #define SCREEN_WIDTH        128   // OLED display width, in pixels
-#define SCREEN_HEIGHT       32    // OLED display hight, in pixels
+#define SCREEN_HEIGHT       32    // OLED display height, in pixels
 #define OLED_RESET          -1    // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS      0x3C  // I2C Address of 128x32 OLED display
 
@@ -182,7 +182,7 @@ void I2C_RxHandler(int byteCount)
   Serial.println();
 }
 
-// Calculate average current drawn by the stepper, using the Arduino's ADC
+// Calculate the average current drawn by the stepper, using the Arduino's ADC
 float avgCurrent(void) {
   int samples = 500;
   float totalCurrent = 0.0;
