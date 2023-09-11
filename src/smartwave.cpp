@@ -91,8 +91,7 @@ void setup()
 
 void loop() {
   moveStepper();
-  //stepper.stop();
-  wait(100);
+  wait(50);
 }
 
 // Custom wait with display
@@ -185,7 +184,7 @@ void I2C_RxHandler(int byteCount)
 
 // Calculate average current drawn by the stepper, using the Arduino's ADC
 float avgCurrent(void) {
-  int samples = 100;
+  int samples = 500;
   float totalCurrent = 0.0;
   for (int i = 0; i < samples; i++) {
     double senseA = analogRead(currentSenseA);
