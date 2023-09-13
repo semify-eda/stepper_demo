@@ -161,10 +161,11 @@ void I2C_RxHandler(int byteCount)
   byte speed;
   byte direction;
 
-  while(Wire2.available()){
-    pos       = Wire2.read();     
-	  speed     = Wire2.read();     
-    direction = Wire2.read();
+  while(Wire2.available())
+  {
+  	pos = Wire2.read();     
+	speed = Wire2.read();     
+	direction = Wire2.read();
   }
 
   stepPos = pos;
