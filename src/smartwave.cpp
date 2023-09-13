@@ -71,15 +71,17 @@ AccelStepper stepper(MotorInterfaceType, dirPinA, dirPinB);
 
 // Initialise the OLED display as an I2C peripheral
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-// Create a second Wire object to receive I2C data from SmartWave.
-// Ensure that the selected pins are not used by default on the EX-MotorShield8874
-TwoWire Wire2(PC9, PA8); 
+/*
+Create a second Wire object to receive I2C data from SmartWave.
+Ensure that the selected pins are not used by default on the EX-MotorShield8874
+The following pins can be used on the STM32 Nucleo F4464RE Microcontroller	 
+*/
+TwoWire Wire2(PC9, PA8); 	// PC9 - I2C3_SDA / PA8 - I2C3_SCL
 
 void setup() 
 {
   Serial.begin(9600);
-  Wire.setSDA(D14);
+  Wire.setSDA(D14);	
   Wire.setSCL(D15);
   Wire2.begin(0x8);
   Wire2.onReceive(I2C_RxHandler);
