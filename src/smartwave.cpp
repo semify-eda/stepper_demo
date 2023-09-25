@@ -7,18 +7,18 @@
   If the stepper motor is used with SmartWave to send data via I2C, the following example data can be used.
 
   The following set of commands changes the position of the stepper motor with an increment of 50 at a constant speed and direction.
-  Position	Speed		Direction
-    0x32     	0x64		 0x00
-    0x64	0x64		 0x00
-    0x96	0x64		 0x00
-    0xC8	0x64		 0x00
+  Position  Speed   Direction
+    0x32     0x64     0x00
+    0x64     0x64     0x00
+    0x96     0x64     0x00
+    0xC8     0x64     0x00
 
   The following set of commands changes the speed, position, and direction of the stepper motor.
-  Position	Speed		Direction
-    0xC8	 0x0A		 0x00	  // Do a full revolution clockwise at low speed.
-    0x00	 0x0A		 0x01	  // Do a full revolution counterclockwise at low speed.
-    0xC8	 0xFA	   	 0x00	  // Do a full revolution clockwise at high speed
-    0x00	 0xFA		 0x01	  // Do a full revolution counterclockwise at high speed.
+  Position  Speed   Direction
+    0xC8     0x0A     0x00    // Do a full revolution clockwise at low speed.
+    0x00     0x0A     0x01    // Do a full revolution counterclockwise at low speed.
+    0xC8     0xFA     0x00    // Do a full revolution clockwise at high speed
+    0x00     0xFA     0x01    // Do a full revolution counterclockwise at high speed.
 */
 
 #include <Arduino.h>    // If used in VSCode / PlatformIO - include the Arduino library
@@ -27,7 +27,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define I2C_ADDRESS         0X8   // I2C address of this device - Used for SmartWave
+#define I2C_ADDRESS         0x8   // I2C address of this device - Used for SmartWave
 #define MotorInterfaceType  2     // Define the AccelStepper interface type to be Full-2-Wire
 #define SCREEN_WIDTH        128   // OLED display width, in pixels
 #define SCREEN_HEIGHT       32    // OLED display height, in pixels
@@ -49,10 +49,9 @@
 // Function declarations
 void initializeDisplay(void);
 void initializeMotor(void);
-void wait(int time);
 void moveStepper(void);  
 float avgCurrent(void);
-void displayData(int position, int amps);
+void displayData(int position, float amps);
 void debugInfo(int position, float amps);
 void I2C_RxHandler(int byteCount);
 
@@ -93,16 +92,8 @@ void setup()
 
 void loop() {
   moveStepper();
-  wait(50);
 }
 
-// Custom wait with display
-void wait(int time)
-{
-  for (int i = 0; i < time; i++){
-    displayData(currentPos, avgCurrent());
-  }
-}
 
 // Initialize the OLED display
 void initializeDisplay(void) 
@@ -115,6 +106,7 @@ void initializeDisplay(void)
   delay(2000);
   display.clearDisplay();
   display.setTextColor(WHITE);
+  Serial.println("Display was successfully initialized.");
 }
 
 // Initialize motor control pins
@@ -124,31 +116,110 @@ void initializeMotor(void)
   pinMode(pwmPinB, OUTPUT);
   pinMode(brakePinA, OUTPUT);
   pinMode(brakePinB, OUTPUT);
-  digitalWrite(pwmPinA, HIGH);
-  digitalWrite(pwmPinB, HIGH);
+  digitalWrite(pwmPinA, LOW);
+  digitalWrite(pwmPinB, LOW);
   digitalWrite(brakePinA, LOW);
   digitalWrite(brakePinB, LOW);
+  Serial.println("Motor was successfully initialized.");
 }
 
 // Control the stepper motor using received I2C commands
 void moveStepper() 
 { 
-    if(stepPos == currentPos) {
-      stepper.stop();
-      Serial.println("Stepper is already at the given position");
-      Serial.println("Waiting for new command");
-    }
+  Serial.println("Calling Stepper function");   
 
-  else
-    Serial.println("Calling Stepper function"); 
-    while (stepper.currentPosition() != stepPos) {
-      stepper.setSpeed(stepSpeed);
-      stepper.runSpeed();
-      currentPos = stepper.currentPosition();
-      amps = avgCurrent();
-      displayData(currentPos, amps);
-      debugInfo(currentPos, amps);
+  if(stepSpeed == 0){
+    Serial.println(F("The speed is set to zero, the stepper won't move."));
+    Serial.println(F("Waiting for new command"));
+  }
+
+  if(stepPos == currentPos) {
+    Serial.println(F("Stepper is already at the given position, the stepper won't move"));
+    Serial.println(F("Waiting for new command"));
+  }
+
+  if (stepPos > 200){
+    Serial.println(F("Invalid position."));
+    Serial.println(F("The possible step position is between 0 and 200."));
+  }
+  else {
+    // If new position is less than the current position 
+    if (stepPos < currentPos){
+      digitalWrite(pwmPinA, HIGH);
+      digitalWrite(pwmPinB, HIGH);
+
+      // If direction is set for clockwise
+      if (stepSpeed > 0){
+        while (stepper.currentPosition() != stepPos) {
+          if (currentPos == 200){
+            stepper.setCurrentPosition(0);
+          }
+          stepper.setSpeed(stepSpeed);
+          stepper.runSpeed();
+          currentPos = stepper.currentPosition();
+          amps = avgCurrent();
+          displayData(currentPos, amps);
+          debugInfo(currentPos, amps);
+        }
+      }
+      // If direction is set for counterclockwise
+      else if (stepSpeed < 0){
+        while (stepper.currentPosition() != stepPos) {
+          if (currentPos == 0){
+            stepper.setCurrentPosition(200);
+          }
+          stepper.setSpeed(stepSpeed);
+          stepper.runSpeed();
+          currentPos = stepper.currentPosition();
+          amps = avgCurrent();
+          displayData(currentPos, amps);
+          debugInfo(currentPos, amps);
+        }
+      }
     }
+    // If new position is greater than the current position
+    else if (stepPos > currentPos){ 
+      digitalWrite(pwmPinA, HIGH);
+      digitalWrite(pwmPinB, HIGH);
+
+      // If direction is set for counterclockwise
+      if (stepSpeed < 0){
+        while (stepper.currentPosition() != stepPos) {
+          if (currentPos == 0){
+            stepper.setCurrentPosition(200);
+            if (stepPos == 200){
+              displayData(stepPos, amps);
+              debugInfo(currentPos, amps);
+              break;
+            }
+          }
+          stepper.setSpeed(stepSpeed);
+          stepper.runSpeed();
+          currentPos = stepper.currentPosition();
+          amps = avgCurrent();
+          displayData(currentPos, amps);
+          debugInfo(currentPos, amps);
+        }
+      }  
+      // If direction is set for clockwise 
+      else {
+        while (stepper.currentPosition() != stepPos) {
+          if (currentPos == 200){
+            stepper.setCurrentPosition(0);
+          }
+          stepper.setSpeed(stepSpeed);
+          stepper.runSpeed();
+          currentPos = stepper.currentPosition();
+          amps = avgCurrent();
+          displayData(currentPos, amps);
+          debugInfo(currentPos, amps);
+        }
+      }
+    }
+    digitalWrite(pwmPinA, LOW);
+    digitalWrite(pwmPinB, LOW);
+    displayData(currentPos, avgCurrent());
+  }
 }
 
 
@@ -163,9 +234,9 @@ void I2C_RxHandler(int byteCount)
 
   while(Wire2.available())
   {
-  	pos = Wire2.read();     
-	speed = Wire2.read();     
-	direction = Wire2.read();
+    pos = Wire2.read();     
+    speed = Wire2.read();     
+    direction = Wire2.read();
   }
 
   stepPos = pos;
@@ -175,8 +246,9 @@ void I2C_RxHandler(int byteCount)
   else if(direction == 1){
     stepSpeed = speed * (-1) ;
   }
-  else
-    Serial.println(F("The received command is not recognised."));
+  else {
+    Serial.println(F("The received command is not recognized."));
+  }
 
   Serial.print("Received Position = ");
   Serial.println(stepPos);
@@ -187,7 +259,7 @@ void I2C_RxHandler(int byteCount)
 
 // Calculate the average current drawn by the stepper, using the Arduino's ADC
 float avgCurrent(void) {
-  int samples = 500;
+  int samples = 300;
   float totalCurrent = 0.0;
   for (int i = 0; i < samples; i++) {
     double senseA = analogRead(currentSenseA);
@@ -199,7 +271,7 @@ float avgCurrent(void) {
 }
 
 // Display motor position and current consumption on OLED display
-void displayData(int position, int amps) {
+void displayData(int position, float amps) {
   display.clearDisplay();
   display.setFont();
   display.setCursor(5, 0);
@@ -211,9 +283,9 @@ void displayData(int position, int amps) {
   display.setCursor(5, 20);
   display.println("Current:");
   display.setCursor(65, 20);
-  display.println(amps);
+  display.println((amps/1000),3);
   display.setCursor(85, 20);
-  display.println(" mA");
+  display.println("  A");
   display.display();
 }
 
