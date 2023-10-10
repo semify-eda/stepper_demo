@@ -152,7 +152,7 @@ void moveStepper()
       if (stepSpeed > 0){
         while (stepper.currentPosition() != stepPos) {
           if (currentPos == 200){
-            stepper.setCurrentPosition(0);
+            stepper.setCurrentPosition(-1);
           }
           stepper.setSpeed(stepSpeed);
           stepper.runSpeed();
@@ -166,7 +166,7 @@ void moveStepper()
       else if (stepSpeed < 0){
         while (stepper.currentPosition() != stepPos) {
           if (currentPos == 0){
-            stepper.setCurrentPosition(200);
+            stepper.setCurrentPosition(199);
           }
           stepper.setSpeed(stepSpeed);
           stepper.runSpeed();
@@ -187,11 +187,12 @@ void moveStepper()
         while (stepper.currentPosition() != stepPos) {
           if (currentPos == 0){
             stepper.setCurrentPosition(200);
+            currentPos = stepper.currentPosition();
             if (stepPos == 200){
               displayData(stepPos, amps);
               debugInfo(currentPos, amps);
               break;
-            }
+            } 
           }
           stepper.setSpeed(stepSpeed);
           stepper.runSpeed();
