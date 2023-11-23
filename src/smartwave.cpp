@@ -54,6 +54,7 @@ float avgCurrent(void);
 void displayData(int position, float amps);
 void debugInfo(int position, float amps);
 void I2C_RxHandler(int byteCount);
+void I2C_TxHandler(void);
 
 // Global Variables
 int stepSpeed;
@@ -84,6 +85,7 @@ void setup()
   Wire.setSCL(D15);
   Wire2.begin(0x8);
   Wire2.onReceive(I2C_RxHandler);
+  Wire2.onRequest(I2C_TxHandler);
   initializeDisplay();
   initializeMotor();
   stepper.setMaxSpeed(2000);
@@ -95,7 +97,13 @@ void loop() {
 }
 
 
-// Initialize the OLED display
+/*
+ * Function: initializeDisplay
+ * -------------------------
+ * 
+ * Initialize the OLED display
+ * 
+*/
 void initializeDisplay(void) 
 {
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -109,7 +117,14 @@ void initializeDisplay(void)
   Serial.println("Display was successfully initialized.");
 }
 
-// Initialize motor control pins
+
+/*
+ * Function: initializeMotor
+ * -------------------------
+ * 
+ * Initialize motor control pins
+ * 
+*/
 void initializeMotor(void) 
 {
   pinMode(pwmPinA, OUTPUT);
@@ -123,8 +138,14 @@ void initializeMotor(void)
   Serial.println("Motor was successfully initialized.");
 }
 
-// Control the stepper motor using received I2C commands
-void moveStepper() 
+/*
+ * Function: moveStepper
+ * -------------------------
+ * 
+ * Control the stepper motor using the received I2C commands
+ * 
+*/
+void moveStepper(void) 
 { 
   Serial.println("Calling Stepper function");   
 
@@ -224,7 +245,14 @@ void moveStepper()
 }
 
 
-// Function to handle I2C data reception
+/*
+ * Function: I2C_RxHandler
+ * -------------------------
+ * 
+ * Receive three bytes of data from to SmartWave, to set the position,
+ * speed and direction of the stepper motor.
+ * 
+*/
 void I2C_RxHandler(int byteCount)
 {
   Serial.println();
@@ -258,7 +286,34 @@ void I2C_RxHandler(int byteCount)
   Serial.println();
 }
 
-// Calculate the average current drawn by the stepper, using the Arduino's ADC
+/*
+ * Function: I2C_TxHandler
+ * -------------------------
+ * 
+ * Transmits the measured current back to the SmartWave
+ * int amps is 16-bits, thefore it needs to be transmitted in two bytes
+ * 
+*/
+void I2C_TxHandler(void) {
+  Serial.println();
+  Serial.println();
+  Serial.println("I2C data transmission");  
+  Serial.print("Measured Current (mA) = ");
+  Serial.println(int(amps));
+  Serial.println();
+  Wire2.write(highByte(int(amps)));
+  Wire2.write(lowByte(int(amps)));
+  delay(10);
+}
+
+
+/*
+ * Function: displayData
+ * -------------------------
+ * 
+ * Calculate the average current drawn by the stepper, using the Arduino's ADC
+ * 
+*/
 float avgCurrent(void) {
   int samples = 300;
   float totalCurrent = 0.0;
@@ -271,7 +326,16 @@ float avgCurrent(void) {
   return avgAmp;
 }
 
-// Display motor position and current consumption on OLED display
+/*
+ * Function: displayData
+ * -------------------------
+ * 
+ * Display motor position and current consumption on OLED display
+ * 
+ * position: Received stepper position 
+ * amps:     Measured average current
+ * 
+*/
 void displayData(int position, float amps) {
   display.clearDisplay();
   display.setFont();
@@ -290,7 +354,16 @@ void displayData(int position, float amps) {
   display.display();
 }
 
-// Print motor position and current to Serial for debugging
+/*
+ * Function: debugInfo
+ * -------------------------
+ * 
+ * Outputs the stepper position and the measured average current to the serial monitor
+ * 
+ * position: Received stepper position 
+ * amps:     Measured average current
+ * 
+*/
 void debugInfo(int position, float amps) {
   Serial.print("Motor Position = ");
   Serial.println(position);
