@@ -290,20 +290,14 @@ void I2C_RxHandler(int byteCount)
  * Function: I2C_TxHandler
  * -------------------------
  * 
- * Transmits the measured current back to the SmartWave
- * int amps is 16-bits, thefore it needs to be transmitted in two bytes
+ * Transmits the current position of the stepper back to the SmartWave
+ * If we want to transmit the measured current then it needs to be sent over two bytes
  * 
 */
 void I2C_TxHandler(void) {
-  Serial.println();
-  Serial.println();
-  Serial.println("I2C data transmission");  
-  Serial.print("Measured Current (mA) = ");
-  Serial.println(int(amps));
-  Serial.println();
-  Wire2.write(highByte(int(amps)));
-  Wire2.write(lowByte(int(amps)));
-  delay(10);
+  Wire2.write(currentPos);
+  //Wire2.write(highByte(int(amps)));
+  //Wire2.write(lowByte(int(amps)));
 }
 
 
