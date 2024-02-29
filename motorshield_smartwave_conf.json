@@ -38,13 +38,13 @@
         "freq": "100000",
         "deviceId": "mc_devid(8)",
         "pinCustomNames": {
-          "SCL": "SCLa"
+          "SCL": "SCL"
         },
         "customName": null
       }
     }
   ],
-  "syncDiv": 2970.029700297003,
+  "syncDiv": 2970.0297002970033,
   "subcycles": 0,
   "triggermode": 0,
   "voltage": 3.3,
@@ -54,5 +54,6 @@
     "mc_devid": "8",
     "slow": "20",
     "fast": "100"
-  }
+  },
+  "notes": ""
 }
