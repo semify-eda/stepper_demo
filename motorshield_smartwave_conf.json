@@ -1,0 +1,58 @@
+{
+  "entries": [
+    {
+      "protocol": {
+        "name": "Data",
+        "pconfig": {
+          "bitWidth": 8,
+          "applicableDrivers": [
+            1
+          ]
+        },
+        "palObjs": [],
+        "stimuli": {},
+        "protocolSelector": null,
+        "inspectors": {},
+        "sampleFreq": "11111.111111111111",
+        "ebscon": "I2C",
+        "mode": 0,
+        "writeData": "110, fast(100), left(1)",
+        "readLength": "1",
+        "registerAddressWidth": "1",
+        "registerDataWidth": "1",
+        "registerOperations": []
+      },
+      "driver": {
+        "type_id": 1,
+        "id": 0,
+        "pins": {
+          "SCL": {
+            "id": "A1",
+            "pullup": true
+          },
+          "SDA": {
+            "id": "A2",
+            "pullup": true
+          }
+        },
+        "freq": "100000",
+        "deviceId": "mc_devid(8)",
+        "pinCustomNames": {
+          "SCL": "SCLa"
+        },
+        "customName": null
+      }
+    }
+  ],
+  "syncDiv": 2970.029700297003,
+  "subcycles": 0,
+  "triggermode": 0,
+  "voltage": 3.3,
+  "variables": {
+    "left": "1",
+    "right": "0",
+    "mc_devid": "8",
+    "slow": "20",
+    "fast": "100"
+  }
+}
